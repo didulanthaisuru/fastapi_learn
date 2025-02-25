@@ -1,30 +1,40 @@
 from fastapi import FastAPI
-from pydantic import BaseModel
+from typing import List
+from uuid import uuid4
+from models import User, Gender, Role  # Importing the User model and enums
 
+# FastAPI app initialization
 app = FastAPI()
 
-class User(BaseModel):
-    name: str
-    age: int
-    email: str
-    is_active: bool=True
+# Sample in-memory database (List of users)
+db: List[User] = [
+    User(
+        id=uuid4(),  # Generate a unique UUID for the user
+        first_name="Jamila",
+        last_name="Ahmed",
+        gender=Gender.female,
+        roles=[Role.student]
+    ),
+    User(
+        id=uuid4(),  # Generate a unique UUID for the user
+        first_name="Alex",
+        last_name="Jones",
+        gender=Gender.male,
+        roles=[Role.admin, Role.user]
+    )
+]
 
+# Root endpoint
 @app.get("/")
 async def root():
     return {"message": "Welcome to FastAPI!"}
 
-@app.get("/about")
-def about():
-    return {"info": "This is an API built with FastAPI"}
+# Fetch all users (this will be accessible via /api)
+@app.get("/api", response_model=List[User])
+async def fetch_users():
+    return db
 
-@app.get("/users/{user_id}")
-def get_user(user_id: int):
-    return {"user_id": user_id, "message": "User found"}
-
-@app.get("/search")
-def search_users(name: str,age: int):
-    return {"name": name, "age": age, "message": "User searched"}
-
-@app.post("/users/")
-def create_user(user: User):
-    return {"message": "User created", "user": user}
+# New user endpoint
+@app.get("/new")
+async def new_user():
+    return {"message": "Create a new user"}
